@@ -1,0 +1,53 @@
+kits:
+  diamond:
+    display-name: "&bАлмазный Кит"
+
+    icon: "DIAMOND"
+    items:
+      '0': # Первый слот хотбара
+        material: "DIAMOND_SWORD"
+        amount: 1
+        enchantments:
+          - "DAMAGE_ALL:1" # Sharpness 1
+      '1':
+        material: "BOW"
+      '2':
+        material: "COOKED_BEEF"
+        amount: 16
+      '8': # Последний слот хотбара
+        material: "ARROW"
+        amount: 32
+    # Броня.
+    armor:
+      helmet:
+        material: "DIAMOND_HELMET"
+      chestplate:
+        material: "DIAMOND_CHESTPLATE"
+      leggings:
+        material: "DIAMOND_LEGGINGS"
+      boots:
+        material: "DIAMOND_BOOTS"
+
+  archer:
+    display-name: "&aКит Лучника"
+    icon: "BOW"
+    items:
+      '0':
+        material: "STONE_SWORD"
+      '1':
+        material: "BOW"
+        enchantments:
+          - "ARROW_DAMAGE:2" # Power 2
+          - "ARROW_INFINITE:1" # Infinity 1
+      '9': # Первый слот в инвентаре над хотбаром
+        material: "ARROW"
+        amount: 1
+    armor:
+      helmet:
+        material: "LEATHER_HELMET"
+      chestplate:
+        material: "CHAINMAIL_CHESTPLATE"
+      leggings:
+        material: "LEATHER_LEGGINGS"
+      boots:
+        material: "CHAINMAIL_BOOTS"
