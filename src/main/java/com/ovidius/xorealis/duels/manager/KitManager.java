@@ -1,6 +1,7 @@
 package com.ovidius.xorealis.duels.manager;
 
 import com.ovidius.xorealis.duels.XorealisDuels;
+import com.ovidius.xorealis.duels.object.Kit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -11,7 +12,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 
 public class KitManager {
