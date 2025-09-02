@@ -1,5 +1,6 @@
 package com.ovidius.xorealis.duels;
 
+import com.ovidius.xorealis.duels.listeners.PlayerListener;
 import com.ovidius.xorealis.duels.manager.ArenaManager;
 import com.ovidius.xorealis.duels.manager.KitManager;
 import com.ovidius.xorealis.duels.manager.MenuManager;
@@ -18,10 +19,13 @@ public final class XorealisDuels extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+
         loadManager();
+        loadListeners();
 
         getLogger().info("Starting XorealisDuels");
         getLogger().info("Loading Managers");
+        getLogger().info("Loading Listeners");
 
     }
 
@@ -36,6 +40,9 @@ public final class XorealisDuels extends JavaPlugin {
         menuManager = new MenuManager();
         arenaManager = new ArenaManager();
         kitManager = new KitManager();
+    }
+    private void loadListeners() {
+        getServer().getPluginManager().registerEvents(new PlayerListener(), this);
     }
 
     public static XorealisDuels getInstance() {
