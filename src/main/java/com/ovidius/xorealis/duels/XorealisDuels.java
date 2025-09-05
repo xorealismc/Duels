@@ -5,6 +5,7 @@ import com.ovidius.xorealis.duels.listeners.PlayerListener;
 import com.ovidius.xorealis.duels.manager.ArenaManager;
 import com.ovidius.xorealis.duels.manager.KitManager;
 import com.ovidius.xorealis.duels.manager.MenuManager;
+import com.ovidius.xorealis.duels.manager.PlayerDataManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class XorealisDuels extends JavaPlugin {
@@ -14,6 +15,7 @@ public final class XorealisDuels extends JavaPlugin {
     private MenuManager menuManager;
     private ArenaManager arenaManager;
     private KitManager kitManager;
+    private PlayerDataManager playerDataManager;
 
     private XorealisDuels() {}
 
@@ -41,6 +43,8 @@ public final class XorealisDuels extends JavaPlugin {
         menuManager = new MenuManager();
         arenaManager = new ArenaManager();
         kitManager = new KitManager(this);
+        playerDataManager = new PlayerDataManager(this);
+
         kitManager.loadKits();
     }
     private void loadListeners() {
@@ -63,4 +67,6 @@ public final class XorealisDuels extends JavaPlugin {
     public KitManager getKitManager() {
         return kitManager;
     }
+
+    public PlayerDataManager getPlayerDataManager() {return playerDataManager;}
 }

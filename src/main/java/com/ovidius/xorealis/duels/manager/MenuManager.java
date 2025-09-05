@@ -66,8 +66,12 @@ public class MenuManager {
     public void openKitEditor(Player player, Kit kit) {
         Inventory editor = Bukkit.createInventory(null, 54, ChatColor.DARK_GRAY + "Редактор: " + kit.getDisplayName());
 
-        editor.setContents(kit.getInventoryContents());
-        player.getInventory().setArmorContents(kit.getArmorContents());
+        XorealisDuels.getInstance().getPlayerDataManager()
+                .loadPlayerLayout(player.getUniqueId(), kit.getId())
+                .ifPresentOrElse(
+                        layout -> editor.setContents(layout.inventoryContents()),
+                        () -> editor.setContents(kit.getInventoryContents())
+                );
 
         ItemStack saveButton = createMenuItem(Material.EMERALD_BLOCK, ChatColor.GREEN + "Сохранить и выйти", List.of(ChatColor.GRAY + "Сохраняет текущую раскладку."));
         ItemStack resetButton = createMenuItem(Material.TNT, ChatColor.YELLOW + "Сбросить раскладку", List.of(ChatColor.GRAY + "Вернуть к стандартной расстановке."));

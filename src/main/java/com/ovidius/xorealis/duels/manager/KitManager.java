@@ -12,14 +12,13 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Level;
 
 public class KitManager {
     private final XorealisDuels plugin;
+
+    private final Map<String, Kit> kitTemplates = new HashMap<>();
 
     public KitManager(XorealisDuels plugin) {
         this.plugin = plugin;
@@ -47,7 +46,7 @@ public class KitManager {
             try {
                 String displayName = ChatColor.translateAlternateColorCodes('&', currentKitSection.getString("display-name", "&cUnnamed Kit"));
 
-                Material iconMaterial = Material.matchMaterial(currentKitSection.getString("icon-material", "STONE"));
+                Material iconMaterial = Material.matchMaterial(currentKitSection.getString("icon", "STONE"));
                 ItemStack icon = new ItemStack(iconMaterial != null ? iconMaterial : Material.BARRIER);
 
 
