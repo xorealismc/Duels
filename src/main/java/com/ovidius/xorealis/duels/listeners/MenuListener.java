@@ -43,7 +43,26 @@ public class MenuListener implements Listener {
             }
             return;
         }
+        if(title.equals(ChatColor.DARK_GRAY+"Выберите кит")){
+            e.setCancelled(true);
+            ItemStack clickedItem = e.getCurrentItem();
+            if(clickedItem == null || clickedItem.getType() == Material.AIR) return;
 
+            String kitDisplayName=clickedItem.getItemMeta().getDisplayName();
+            XorealisDuels.getInstance().getKitManager().getAllKitTemplates().stream()
+                    .filter(kit -> kit.getDisplayName().equals(kitDisplayName))
+                    .findFirst()
+                    .ifPresent(kit -> {
+                        if(e.isLeftClick()){
+                            XorealisDuels.getInstance().getQueueManager().addPlayerToQueue(player, kit);
+                            player.closeInventory();
+                        }
+                        else if(e.isRightClick()){
+                            XorealisDuels.getInstance().getMenuManager().openKitEditor(player, kit);
+                        }
+                    });
+            return;
+        }
         if (title.startsWith(ChatColor.DARK_GRAY + "Редактор: ")) {
             int slot = e.getRawSlot();
 

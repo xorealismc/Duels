@@ -1,6 +1,7 @@
 name: ${project.name}
 version: ${project.version}
-main: com.ovidius.xorealis.XorealisDuels
+main: com.ovidius.xorealis.duels.XorealisDuels
 api-version: '1.21'
-author: SnappyWave, Spacy
+author: SnappyWave
 description: A powerful plugin to Xorealis server.
+softdepend: [Multiverse-Core]

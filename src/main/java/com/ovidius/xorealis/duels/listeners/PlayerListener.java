@@ -5,10 +5,14 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -56,6 +60,27 @@ public class PlayerListener implements Listener {
         }
     }
     @EventHandler
+    public void onPlayerDropItem(PlayerDropItemEvent event) {
+        ItemStack droppedItem = event.getItemDrop().getItemStack();
+        if (isDuelCompass(droppedItem)) {
+            event.setCancelled(true); // Отменяем выбрасывание
+            event.getPlayer().sendMessage(ChatColor.RED + "Вы не можете выбросить этот предмет.");
+        }
+    }
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onCompassMove(InventoryClickEvent event) {
+        if (event.getClickedInventory() == null || event.getClickedInventory().getType() != InventoryType.PLAYER) {
+            return;
+        }
+        ItemStack item = event.getCurrentItem();
+        ItemStack cursor = event.getCursor();
+        if (isDuelCompass(item) || isDuelCompass(cursor)) {
+            event.setCancelled(true);
+            ((Player) event.getWhoClicked()).sendMessage(ChatColor.RED + "Вы не можете переместить этот предмет.");
+        }
+    }
+
+    @EventHandler
     public void onInventoryOpen(InventoryOpenEvent event) {
         if (!(event.getPlayer() instanceof Player player)) return;
 
@@ -90,5 +115,14 @@ public class PlayerListener implements Listener {
             playerInventoryCache.remove(uuid);
             playerArmorCache.remove(uuid);
         }
+    }
+    private boolean isDuelCompass(ItemStack item) {
+        if (item == null || item.getType() != Material.COMPASS) {
+            return false;
+        }
+        if (!item.hasItemMeta() || !item.getItemMeta().hasDisplayName()) {
+            return false;
+        }
+        return ChatColor.stripColor(item.getItemMeta().getDisplayName()).startsWith("Меню Дуэлей");
     }
 }

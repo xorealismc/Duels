@@ -17,7 +17,7 @@ public final class XorealisDuels extends JavaPlugin {
     private QueueManager queueManager;
     private DuelManager duelManager;
 
-    private XorealisDuels() {}
+    public XorealisDuels() {}
 
     @Override
     public void onEnable() {
@@ -27,7 +27,7 @@ public final class XorealisDuels extends JavaPlugin {
         saveResource("kits.yml", false);
         saveResource("arenas.yml", false);
 
-        loadManager();
+        loadManagers();
         loadListeners();
 
         getLogger().info("XorealisDuels has been enabled successfully.");
@@ -38,7 +38,7 @@ public final class XorealisDuels extends JavaPlugin {
         getLogger().info("Stopping XorealisDuels");
     }
 
-    private void loadManager() {
+    private void loadManagers() {
         menuManager = new MenuManager();
         arenaManager = new ArenaManager(this);
         kitManager = new KitManager(this);
@@ -52,5 +52,7 @@ public final class XorealisDuels extends JavaPlugin {
     private void loadListeners() {
         getServer().getPluginManager().registerEvents(new PlayerListener(), this);
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
+
+        getServer().getPluginManager().registerEvents(duelManager, this);
     }
 }

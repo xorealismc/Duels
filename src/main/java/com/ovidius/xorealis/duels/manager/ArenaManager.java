@@ -26,9 +26,6 @@ public class ArenaManager {
     public void loadArenas() {
         arenas.clear();
         File arenasFile = new File(plugin.getDataFolder(), "arenas.yml");
-        if (!arenasFile.exists()) {
-            plugin.saveResource("arenas.yml", false);
-        }
 
         FileConfiguration config = YamlConfiguration.loadConfiguration(arenasFile);
         ConfigurationSection section = config.getConfigurationSection("arenas");
@@ -57,6 +54,15 @@ public class ArenaManager {
             }catch (Exception e){
                 plugin.getLogger().log(Level.SEVERE, "Error loading arena '" + arenaId + "'", e);
             }
+        }
+        if (arenas.isEmpty()) {
+            plugin.getLogger().log(Level.SEVERE, "==================================================");
+            plugin.getLogger().log(Level.SEVERE, "НИ ОДНОЙ АРЕНЫ НЕ БЫЛО ЗАГРУЖЕНО!");
+            plugin.getLogger().log(Level.SEVERE, "Пожалуйста, проверьте ваш файл arenas.yml.");
+            plugin.getLogger().log(Level.SEVERE, "Убедитесь, что миры, указанные в конфиге, существуют и загружены.");
+            plugin.getLogger().log(Level.SEVERE, "==================================================");
+        } else {
+            plugin.getLogger().info("Загружено " + arenas.size() + " арен.");
         }
     }
     private Location parseLocation(World world, ConfigurationSection section) {
