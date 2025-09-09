@@ -22,10 +22,10 @@ public class QueueManager {
 
         player.sendMessage("§aВы встали в очередь для дуэли 1v1 с китом: " + kit.getDisplayName());
 
-        checkForMathes(kit);
+        checkForMatches(kit);
     }
 
-    private void checkForMathes(Kit kit) {
+    private void checkForMatches(Kit kit) {
         LinkedList<Player> queue = unranked1v1Queue.get(kit.getId());
         if(queue == null && queue.size()>=2) {
             Player player1 = queue.poll();
@@ -39,6 +39,7 @@ public class QueueManager {
                 com.ovidius.xorealis.duels.object.Arena arena=availableArena.get();
                 plugin.getLogger().info("Match was found! "+player1.getName()+" vs "+player2.getName()+" on arena "+arena.getId());
 
+                plugin.getDuelManager().startDuel(player1,player2,arena,kit);
             }else {
                 player1.sendMessage("Не удалось найти свободную арену! Попробуйте позже");
                 player2.sendMessage("Не удалось найти свободную арену! Попробуйте позже");

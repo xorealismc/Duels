@@ -15,6 +15,7 @@ public final class XorealisDuels extends JavaPlugin {
     private KitManager kitManager;
     private PlayerDataManager playerDataManager;
     private QueueManager queueManager;
+    private DuelManager duelManager;
 
     private XorealisDuels() {}
 
@@ -43,6 +44,7 @@ public final class XorealisDuels extends JavaPlugin {
         kitManager = new KitManager(this);
         playerDataManager = new PlayerDataManager(this);
         queueManager = new QueueManager(this);
+        duelManager = new DuelManager(this);
 
         arenaManager.loadArenas();
         kitManager.loadKits();
