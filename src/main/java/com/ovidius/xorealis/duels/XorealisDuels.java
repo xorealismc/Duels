@@ -2,20 +2,19 @@ package com.ovidius.xorealis.duels;
 
 import com.ovidius.xorealis.duels.listeners.MenuListener;
 import com.ovidius.xorealis.duels.listeners.PlayerListener;
-import com.ovidius.xorealis.duels.manager.ArenaManager;
-import com.ovidius.xorealis.duels.manager.KitManager;
-import com.ovidius.xorealis.duels.manager.MenuManager;
-import com.ovidius.xorealis.duels.manager.PlayerDataManager;
+import com.ovidius.xorealis.duels.manager.*;
+import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
-
+@Getter
 public final class XorealisDuels extends JavaPlugin {
 
-    private static XorealisDuels instance;
+    @Getter private static XorealisDuels instance;
 
     private MenuManager menuManager;
     private ArenaManager arenaManager;
     private KitManager kitManager;
     private PlayerDataManager playerDataManager;
+    private QueueManager queueManager;
 
     private XorealisDuels() {}
 
@@ -23,13 +22,14 @@ public final class XorealisDuels extends JavaPlugin {
     public void onEnable() {
         instance = this;
 
+        saveDefaultConfig();
+        saveResource("kits.yml", false);
+        saveResource("arenas.yml", false);
+
         loadManager();
         loadListeners();
 
-        getLogger().info("Starting XorealisDuels");
-        getLogger().info("Loading Managers");
-        getLogger().info("Loading Listeners");
-
+        getLogger().info("XorealisDuels has been enabled successfully.");
     }
 
     @Override
@@ -37,36 +37,18 @@ public final class XorealisDuels extends JavaPlugin {
         getLogger().info("Stopping XorealisDuels");
     }
 
-
-
     private void loadManager() {
         menuManager = new MenuManager();
-        arenaManager = new ArenaManager();
+        arenaManager = new ArenaManager(this);
         kitManager = new KitManager(this);
         playerDataManager = new PlayerDataManager(this);
+        queueManager = new QueueManager(this);
 
+        arenaManager.loadArenas();
         kitManager.loadKits();
     }
     private void loadListeners() {
         getServer().getPluginManager().registerEvents(new PlayerListener(), this);
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
     }
-
-    public static XorealisDuels getInstance() {
-        return instance;
-    }
-
-    public MenuManager getMenuManager() {
-        return menuManager;
-    }
-
-    public ArenaManager getArenaManager() {
-        return arenaManager;
-    }
-
-    public KitManager getKitManager() {
-        return kitManager;
-    }
-
-    public PlayerDataManager getPlayerDataManager() {return playerDataManager;}
 }
