@@ -73,8 +73,15 @@ public class QueueManager {
             }
         }
     }
-    public void removePlayerFromAllQueues(UUID playerUUID) {
-        queues.values().forEach(q -> q.remove(playerUUID));
+    public boolean removePlayerFromAllQueues(UUID playerUUID) {
+        final boolean[] removed={false};
+
+        queues.values().forEach(q->{
+            if(q.remove(playerUUID)) {
+                removed[0]=true;
+            }
+        });
+        return removed[0];
     }
 
     private Optional<Player> getPlayerFromUUID(UUID uuid) {

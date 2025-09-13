@@ -5,3 +5,8 @@ api-version: '1.21'
 author: SnappyWave
 description: A powerful plugin to Xorealis server.
 softdepend: [Multiverse-Core]
+commands:
+  leavequeue:
+    description: Позволяет игроку покинуть очередь на дуэль.
+    usage: "/<command>"
+    aliases: [lq,ql]

@@ -1,5 +1,6 @@
 package com.ovidius.xorealis.duels;
 
+import com.ovidius.xorealis.duels.command.LeaveQueueCommand;
 import com.ovidius.xorealis.duels.listeners.DuelProtectionListener;
 import com.ovidius.xorealis.duels.listeners.MenuListener;
 import com.ovidius.xorealis.duels.listeners.PlayerListener;
@@ -31,6 +32,7 @@ public final class XorealisDuels extends JavaPlugin {
 
         loadManagers();
         loadListeners();
+        loadCommands();
 
         getLogger().info("XorealisDuels has been enabled successfully.");
     }
@@ -58,5 +60,9 @@ public final class XorealisDuels extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
         getServer().getPluginManager().registerEvents(duelManager, this);
         getServer().getPluginManager().registerEvents(new DuelProtectionListener(this), this);
+    }
+
+    private void loadCommands() {
+        getCommand("leavequeue").setExecutor(new LeaveQueueCommand(this));
     }
 }
