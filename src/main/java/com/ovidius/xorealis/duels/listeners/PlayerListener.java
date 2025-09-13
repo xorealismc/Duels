@@ -2,6 +2,7 @@ package com.ovidius.xorealis.duels.listeners;
 
 import com.ovidius.xorealis.duels.XorealisDuels;
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -19,30 +20,59 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class PlayerListener implements Listener {
 
-    private final Map<UUID, ItemStack[]> playerInventoryCache = new HashMap<>();
-    private final Map<UUID, ItemStack[]> playerArmorCache = new HashMap<>();
+    private final XorealisDuels plugin;
+    private final Set<UUID> playersInLobby = new HashSet<>();
 
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
+    public PlayerListener(XorealisDuels plugin) {
+        this.plugin = plugin;
+    }
 
+    public void setLobbyState(Player player) {
+        playersInLobby.add(player.getUniqueId());
+
+        player.getInventory().clear();
+        player.getInventory().setArmorContents(null);
+        player.setHealth(20.0);
+        player.setFoodLevel(20);
+        player.setExp(0);
+        player.setLevel(0);
+        player.setGameMode(GameMode.ADVENTURE);
+        player.getActivePotionEffects().clear();
+
+        giveLobbyItems(player);
+    }
+
+    public void removeLobbyState(Player player) {
+        playersInLobby.remove(player.getUniqueId());
+    }
+
+    private void giveLobbyItems(Player player) {
         ItemStack compass = new ItemStack(Material.COMPASS);
         ItemMeta compassMeta = compass.getItemMeta();
 
-        compassMeta.setDisplayName(ChatColor.GREEN +"Меню Дуэлей"+ChatColor.GRAY+"(ПКМ)");
+        if (compassMeta == null) return;
+
+        compassMeta.setDisplayName(ChatColor.GREEN + "Меню Дуэлей" + ChatColor.GRAY + "(ПКМ)");
         compassMeta.setLore(List.of(
-                ChatColor.GRAY+"Нажмите что бы открыть меню",
-                ChatColor.GRAY+"выбора режимов дуэлей."
+                ChatColor.GRAY + "Нажмите что бы открыть меню",
+                ChatColor.GRAY + "выбора режимов дуэлей."
         ));
         compass.setItemMeta(compassMeta);
         player.getInventory().setItem(0, compass);
+    }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        setLobbyState(event.getPlayer());
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        playersInLobby.remove(event.getPlayer().getUniqueId());
     }
 
     @EventHandler
@@ -50,72 +80,39 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         Action action = event.getAction();
 
-        if(action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK) {
-            ItemStack itemHand = player.getInventory().getItemInMainHand();
-
-            if(itemHand != null && itemHand.getType() == Material.COMPASS && itemHand.hasItemMeta() && itemHand.hasItemMeta() && itemHand.getItemMeta().hasDisplayName()) {
+        if (playersInLobby.contains(player.getUniqueId()) &&
+                (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK)) {
+            if (isDuelCompass(event.getItem())) {
                 event.setCancelled(true);
-                XorealisDuels.getInstance().getMenuManager().openMainMenu(player);
+                plugin.getMenuManager().openMainMenu(player);
             }
         }
     }
+
     @EventHandler
     public void onPlayerDropItem(PlayerDropItemEvent event) {
-        ItemStack droppedItem = event.getItemDrop().getItemStack();
-        if (isDuelCompass(droppedItem)) {
-            event.setCancelled(true); // Отменяем выбрасывание
-            event.getPlayer().sendMessage(ChatColor.RED + "Вы не можете выбросить этот предмет.");
-        }
-    }
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onCompassMove(InventoryClickEvent event) {
-        if (event.getClickedInventory() == null || event.getClickedInventory().getType() != InventoryType.PLAYER) {
-            return;
-        }
-        ItemStack item = event.getCurrentItem();
-        ItemStack cursor = event.getCursor();
-        if (isDuelCompass(item) || isDuelCompass(cursor)) {
+        if (playersInLobby.contains(event.getPlayer().getUniqueId()) &&
+                isDuelCompass(event.getItemDrop().getItemStack())) {
             event.setCancelled(true);
-            ((Player) event.getWhoClicked()).sendMessage(ChatColor.RED + "Вы не можете переместить этот предмет.");
         }
     }
 
-    @EventHandler
-    public void onInventoryOpen(InventoryOpenEvent event) {
-        if (!(event.getPlayer() instanceof Player player)) return;
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onCompassMoveInInventory(InventoryClickEvent event) {
+        if (!playersInLobby.contains(event.getWhoClicked().getUniqueId())) return;
 
-        if (event.getView().getTitle().startsWith(ChatColor.DARK_GRAY + "Редактор: ")) {
-            playerInventoryCache.put(player.getUniqueId(), player.getInventory().getContents());
-            playerArmorCache.put(player.getUniqueId(), player.getInventory().getArmorContents());
-            player.getInventory().clear();
+        if (event.getClickedInventory() != null && event.getClickedInventory().getType() == InventoryType.PLAYER) {
+            if (isDuelCompass(event.getCurrentItem())) {
+                event.setCancelled(true);
+            }
         }
-    }
-
-    @EventHandler
-    public void onInventoryClose(InventoryCloseEvent event) {
-        if (!(event.getPlayer() instanceof Player player)) return;
-
-        if (event.getView().getTitle().startsWith(ChatColor.DARK_GRAY + "Редактор: ")) {
-            restorePlayerInventory(player);
-            player.sendMessage(ChatColor.GRAY + "Вы вышли из редактора.");
+        if (isDuelCompass(event.getCursor())) {
+            event.setCancelled(true);
         }
+
     }
 
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        restorePlayerInventory(event.getPlayer());
-    }
 
-    private void restorePlayerInventory(Player player) {
-        UUID uuid = player.getUniqueId();
-        if (playerInventoryCache.containsKey(uuid) && playerArmorCache.containsKey(uuid)) {
-            player.getInventory().clear();
-            player.getInventory().setContents(playerInventoryCache.get(uuid));
-            player.getInventory().setArmorContents(playerArmorCache.get(uuid));
-            playerInventoryCache.remove(uuid);
-            playerArmorCache.remove(uuid);
-        }
-    }
     private boolean isDuelCompass(ItemStack item) {
         if (item == null || item.getType() != Material.COMPASS) {
             return false;

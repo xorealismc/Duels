@@ -16,6 +16,7 @@ public final class XorealisDuels extends JavaPlugin {
     private PlayerDataManager playerDataManager;
     private QueueManager queueManager;
     private DuelManager duelManager;
+    private PlayerListener playerListener;
 
     public XorealisDuels() {}
 
@@ -50,7 +51,9 @@ public final class XorealisDuels extends JavaPlugin {
         kitManager.loadKits();
     }
     private void loadListeners() {
-        getServer().getPluginManager().registerEvents(new PlayerListener(), this);
+        playerListener = new PlayerListener(this);
+
+        getServer().getPluginManager().registerEvents(playerListener, this);
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
 
         getServer().getPluginManager().registerEvents(duelManager, this);
