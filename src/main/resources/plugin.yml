@@ -10,3 +10,11 @@ commands:
     description: Позволяет игроку покинуть очередь на дуэль.
     usage: "/<command>"
     aliases: [lq,ql]
+  duels:
+    description: Главная команда плагина XorealisDuels.
+    usage: "/<command> [reload]"
+    aliases: [duel]
+permissions:
+  xorealis.duels.reload:
+    description: Дает доступ к комманде /duels reload
+    default: op

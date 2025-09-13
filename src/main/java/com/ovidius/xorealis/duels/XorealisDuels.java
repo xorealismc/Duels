@@ -1,5 +1,6 @@
 package com.ovidius.xorealis.duels;
 
+import com.ovidius.xorealis.duels.command.DuelsCommand;
 import com.ovidius.xorealis.duels.command.LeaveQueueCommand;
 import com.ovidius.xorealis.duels.listeners.DuelProtectionListener;
 import com.ovidius.xorealis.duels.listeners.MenuListener;
@@ -64,5 +65,6 @@ public final class XorealisDuels extends JavaPlugin {
 
     private void loadCommands() {
         getCommand("leavequeue").setExecutor(new LeaveQueueCommand(this));
+        getCommand("duels").setExecutor(new DuelsCommand(this));
     }
 }
