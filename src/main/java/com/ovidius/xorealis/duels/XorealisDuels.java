@@ -1,5 +1,6 @@
 package com.ovidius.xorealis.duels;
 
+import com.ovidius.xorealis.duels.listeners.DuelProtectionListener;
 import com.ovidius.xorealis.duels.listeners.MenuListener;
 import com.ovidius.xorealis.duels.listeners.PlayerListener;
 import com.ovidius.xorealis.duels.manager.*;
@@ -55,7 +56,7 @@ public final class XorealisDuels extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(playerListener, this);
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
-
         getServer().getPluginManager().registerEvents(duelManager, this);
+        getServer().getPluginManager().registerEvents(new DuelProtectionListener(this), this);
     }
 }
