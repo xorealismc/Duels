@@ -8,6 +8,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 import java.util.List;
@@ -31,8 +32,8 @@ public class DuelProtectionListener implements Listener {
         }
     }
     @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event){
-        if(isPlayerInDuel(event.getPlayer())){
+    public void onPlayerDropItemInDuel(PlayerDropItemEvent event) {
+        if (isPlayerInDuel(event.getPlayer())) {
             event.setCancelled(true);
         }
     }
