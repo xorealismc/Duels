@@ -2,6 +2,8 @@ package com.ovidius.xorealis.duels.manager;
 
 import com.ovidius.xorealis.duels.object.Party;
 import lombok.RequiredArgsConstructor;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
@@ -12,9 +14,13 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 public class PartyManager {
+
     private final Map<UUID, Party> playerPartyMap = new HashMap<>();
+
+    private final Map<UUID, Party> invites = new HashMap<>();
+
     public void createParty(Player leader) {
-        if(playerPartyMap.containsKey(leader.getUniqueId())) {
+        if (playerPartyMap.containsKey(leader.getUniqueId())) {
             leader.sendMessage(ChatColor.RED + "Вы уже находитесь в пати! Пожалуйста покиньте её");
             return;
         }
@@ -25,5 +31,61 @@ public class PartyManager {
 
     public Optional<Party> getParty(Player player) {
         return Optional.ofNullable(playerPartyMap.get(player.getUniqueId()));
+    }
+
+    public void inviteParty(Player leader, Player target) {
+        Optional<Party> partyOpt = getParty(leader);
+
+        if (partyOpt.isEmpty()) {
+            leader.sendMessage(ChatColor.RED + "Только лидер пати может приглашать игроков");
+            return;
+        }
+        Party party = partyOpt.get();
+
+        if (leader.equals(target)) {
+            leader.sendMessage(ChatColor.RED + "Вы не можете пригласить самого себя");
+            return;
+        }
+
+        if (getParty(target).isPresent()) {
+            leader.sendMessage(ChatColor.RED + "Игрок " + target.getName() + " вы уже состоите в пати");
+            return;
+        }
+        invites.put(target.getUniqueId(), party);
+        party.addInvite(target);
+
+        leader.sendMessage(ChatColor.RED + "Вы пригласили " + target.getName() + " в пати");
+
+        TextComponent message = new TextComponent(ChatColor.YELLOW + "----------------------------------\\n");
+        TextComponent inviteBody = new TextComponent(ChatColor.GREEN + "" + leader.getName() + " пригласил вас в пати! ");
+        TextComponent acceptButton = new TextComponent(ChatColor.AQUA + "[ПРИНЯТЬ]");
+        acceptButton.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/party accept " + leader.getName()));
+        inviteBody.addExtra(acceptButton);
+        message.addExtra(inviteBody);
+        message.addExtra("\n" + ChatColor.YELLOW + "----------------------------------");
+
+        target.spigot().sendMessage(message);
+    }
+
+    public void acceptInvite(Player player, Player leader) {
+        Party party = invites.get(player.getUniqueId());
+
+        if (party == null || !party.isLeader(leader)) {
+            player.sendMessage(ChatColor.RED + "Приглашение не найдено или истекло");
+            return;
+        }
+
+        if (!party.hasInvite(player)) {
+            player.sendMessage(ChatColor.RED + "Приглашение не найдено или истекло");
+            invites.remove(player.getUniqueId());
+            return;
+        }
+
+        party.removeInvite(player);
+        invites.remove(player.getUniqueId());
+        party.addMember(player);
+        playerPartyMap.put(player.getUniqueId(), party);
+
+        party.broadcast(ChatColor.RED + "Игрок " + player.getName() + " присоединился к пати!");
     }
 }

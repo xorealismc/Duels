@@ -4,16 +4,15 @@ import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Getter
 public class Party {
     private final UUID leader;
     private final Set<UUID> members = new HashSet<>();
+    private final Map<UUID,Long> pendingInvites = new ConcurrentHashMap<>();
 
     public Party(Player leader) {
         this.leader = leader.getUniqueId();
@@ -24,9 +23,13 @@ public class Party {
         members.add(player.getUniqueId());
     }
 
+    public void addInvite(Player target){pendingInvites.put(target.getUniqueId(),System.currentTimeMillis());}
+
     public void removeMember(Player player) {
         members.remove(player.getUniqueId());
     }
+
+    public void removeInvite(Player target){pendingInvites.remove(target.getUniqueId());}
 
     public boolean isMember(Player player) {
         return members.contains(player.getUniqueId());
@@ -34,6 +37,11 @@ public class Party {
 
     public boolean isLeader(Player player) {
         return leader.equals(player.getUniqueId());
+    }
+
+    public boolean hasInvite(Player target) {
+        return pendingInvites.containsKey(target.getUniqueId()) &&
+                (System.currentTimeMillis() - pendingInvites.get(target.getUniqueId())) < 60_000;
     }
 
     public int getSize(){
