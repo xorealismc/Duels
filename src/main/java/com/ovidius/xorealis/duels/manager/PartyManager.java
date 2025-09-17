@@ -90,8 +90,8 @@ public class PartyManager {
     }
 
     public void disbandParty(Party party) {
-        party.broadcast(ChatColor.RED+"Пати была распущена лидером");
-        for(UUID memberUUID : party.getMembers()){
+        party.broadcast("§cПати была распущена лидером.");
+        for (UUID memberUUID : party.getMembers()) {
             playerPartyMap.remove(memberUUID);
             invites.remove(memberUUID);
         }
@@ -100,18 +100,17 @@ public class PartyManager {
     public void leaveParty(Player player) {
         Optional<Party> partyOpt = getParty(player);
         if (partyOpt.isEmpty()) {
-            player.sendMessage(ChatColor.RED+"Вы не состоите в пати");
+            player.sendMessage("§cВы не состоите в пати.");
             return;
         }
-
         Party party = partyOpt.get();
-        if(party.isLeader(player)){
+        if (party.isLeader(player)) {
             disbandParty(party);
-        }else {
+        } else {
             party.removeMember(player);
             playerPartyMap.remove(player.getUniqueId());
-            player.sendMessage(ChatColor.RED+"Вы покинули пати");
-            party.broadcast(ChatColor.YELLOW+"Игрок "+player.getName()+" покинул пати");
+            player.sendMessage("§eВы покинули пати.");
+            party.broadcast("§eИгрок " + player.getName() + " покинул пати.");
         }
     }
     public void kickPlayer(Player leader, Player target) {
@@ -135,7 +134,7 @@ public class PartyManager {
         party.removeMember(target);
         playerPartyMap.remove(target.getUniqueId());
 
-        party.broadcast(ChatColor.YELLOW+"Игрок "+target.getName()+" был исключен из пати");
-        target.sendMessage(ChatColor.RED+"Вы были исключены из пати");
+        party.broadcast("§eИгрок " + target.getName() + " был исключен из пати.");
+        target.sendMessage("§cВы были исключены из пати.");
     }
 }

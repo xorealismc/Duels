@@ -1,6 +1,7 @@
 package com.ovidius.xorealis.duels.command;
 
 import com.ovidius.xorealis.duels.XorealisDuels;
+import com.ovidius.xorealis.duels.manager.PartyManager;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -18,13 +19,15 @@ public class PartyCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "Эту команду может выполнять только игрок.");
+            sender.sendMessage("§cЭту команду может использовать только игрок.");
             return true;
         }
+
         Player player = (Player) sender;
+        PartyManager partyManager = plugin.getPartyManager();
 
         if (args.length == 0) {
-            player.sendMessage(ChatColor.YELLOW + "Используйте: /party create");
+            sendHelpMessage(player);
             return true;
         }
 
@@ -62,7 +65,16 @@ public class PartyCommand implements CommandExecutor {
                 plugin.getPartyManager().leaveParty(player);
                 break;
             case "disband":
-                plugin.getPartyManager().leaveParty(player);
+                partyManager.getParty(player).ifPresentOrElse(
+                        party -> {
+                            if (party.isLeader(player)) {
+                                partyManager.disbandParty(party);
+                            } else {
+                                player.sendMessage("§cТолько лидер может распустить пати.");
+                            }
+                        },
+                        () -> player.sendMessage("§cВы не состоите в пати.")
+                );
                 break;
             case "kick":
                 if (args.length < 2) {
@@ -78,9 +90,9 @@ public class PartyCommand implements CommandExecutor {
                 break;
 
             case "list":
-                plugin.getPartyManager().getParty(player).ifPresentOrElse(
+                partyManager.getParty(player).ifPresentOrElse(
                         party -> {
-                            player.sendMessage("§e--- Участники пати ---");
+                            player.sendMessage("§e--- Участники пати (" + party.getSize() + ") ---");
                             party.getOnlineMembers().forEach(member -> {
                                 if (party.isLeader(member)) {
                                     player.sendMessage("§a- " + member.getName() + " (Лидер)");
@@ -88,7 +100,7 @@ public class PartyCommand implements CommandExecutor {
                                     player.sendMessage("§7- " + member.getName());
                                 }
                             });
-                            player.sendMessage("§e--------------------");
+                            player.sendMessage("§e----------------------");
                         },
                         () -> player.sendMessage("§cВы не состоите в пати.")
                 );
@@ -100,6 +112,16 @@ public class PartyCommand implements CommandExecutor {
         }
 
         return true;
+    }
+    private void sendHelpMessage(Player player) {
+        player.sendMessage("§6--- Команды Пати ---");
+        player.sendMessage("§e/party create §7- Создать пати.");
+        player.sendMessage("§e/party invite <игрок> §7- Пригласить игрока.");
+        player.sendMessage("§e/party accept <игрок> §7- Принять приглашение.");
+        player.sendMessage("§e/party leave §7- Покинуть пати.");
+        player.sendMessage("§e/party kick <игрок> §7- (Лидер) Исключить игрока.");
+        player.sendMessage("§e/party disband §7- (Лидер) Распустить пати.");
+        player.sendMessage("§e/party list §7- Показать список участников.");
     }
 
 }

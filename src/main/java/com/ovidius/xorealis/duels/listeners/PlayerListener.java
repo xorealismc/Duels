@@ -117,6 +117,15 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent e) {
+        Player player = e.getPlayer();
+        plugin.getPartyManager().getParty(player).ifPresent(party -> {
+            if(party.isLeader(player)) {
+                plugin.getPartyManager().disbandParty(party);
+            } else {
+                party.removeMember(player);
+                party.broadcast("§eИгрок " + player.getName() + " покинул пати (вышел из игры).");
+            }
+        });
         if(isEditing(e.getPlayer())) {
             exitEditMode(e.getPlayer());
         }

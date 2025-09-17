@@ -16,6 +16,8 @@ commands:
     aliases: [duel]
   party:
     description: Управление вашей пати для командных дуэлей
+    usage: "/<command> [create|invite|accept|leave|kick|list]"
+    aliases: [p]
 permissions:
   xorealis.duels.reload:
     description: Дает доступ к комманде /duels reload
