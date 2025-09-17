@@ -32,16 +32,28 @@ public class MenuManager {
         Collection<Kit> allKits = XorealisDuels.getInstance().getKitManager().getAllKitTemplates();
         int size = ((allKits.size() + 8) / 9) * 9;
         size = Math.max(9, size);
-        Inventory kitSelectorMenu = Bukkit.createInventory(null, size, ChatColor.DARK_GRAY + KIT_SELECTOR_TITLE);        for (Kit kit : allKits) {
+        boolean isInParty = XorealisDuels.getInstance().getPartyManager().getParty(player).isPresent();
+
+        Inventory kitSelectorMenu = Bukkit.createInventory(null, size, ChatColor.DARK_GRAY + KIT_SELECTOR_TITLE);
+        for (Kit kit : allKits) {
             ItemStack icon = kit.getIcon().clone();
             ItemMeta meta = icon.getItemMeta();
             if (meta != null) {
                 meta.setDisplayName(kit.getDisplayName());
-                meta.setLore(List.of(
-                        "",
-                        ChatColor.GREEN + "▶ ЛКМ - Начать поиск игры",
-                        ChatColor.AQUA + "▶ ПКМ - Настроить раскладку"
-                ));
+                if (isInParty) {
+                    meta.setLore(List.of(
+                            "",
+                            "§a▶ ЛКМ - Начать дуэль с напарником",
+                            "§b▶ ПКМ - Настроить раскладку"
+                    ));
+                } else {
+                    meta.setLore(List.of(
+                            "",
+                            "§a▶ ЛКМ - Начать поиск случайной игры",
+                            "§b▶ ПКМ - Настроить раскладку"
+                    ));
+
+                }
                 icon.setItemMeta(meta);
             }
             kitSelectorMenu.addItem(icon);
