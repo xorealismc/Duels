@@ -2,6 +2,7 @@ package com.ovidius.xorealis.duels;
 
 import com.ovidius.xorealis.duels.command.DuelsCommand;
 import com.ovidius.xorealis.duels.command.LeaveQueueCommand;
+import com.ovidius.xorealis.duels.command.PartyCommand;
 import com.ovidius.xorealis.duels.listeners.DuelProtectionListener;
 import com.ovidius.xorealis.duels.listeners.MenuListener;
 import com.ovidius.xorealis.duels.listeners.PlayerListener;
@@ -20,6 +21,7 @@ public final class XorealisDuels extends JavaPlugin {
     private QueueManager queueManager;
     private DuelManager duelManager;
     private PlayerListener playerListener;
+    private PartyManager partyManager;
 
     public XorealisDuels() {}
 
@@ -50,6 +52,7 @@ public final class XorealisDuels extends JavaPlugin {
         playerDataManager = new PlayerDataManager(this);
         queueManager = new QueueManager(this);
         duelManager = new DuelManager(this);
+        partyManager = new PartyManager();
 
         arenaManager.loadArenas();
         kitManager.loadKits();
@@ -66,5 +69,6 @@ public final class XorealisDuels extends JavaPlugin {
     private void loadCommands() {
         getCommand("leavequeue").setExecutor(new LeaveQueueCommand(this));
         getCommand("duels").setExecutor(new DuelsCommand(this));
+        getCommand("party").setExecutor(new PartyCommand(this));
     }
 }

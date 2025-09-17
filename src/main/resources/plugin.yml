@@ -14,6 +14,8 @@ commands:
     description: Главная команда плагина XorealisDuels.
     usage: "/<command> [reload]"
     aliases: [duel]
+  party:
+    description: Управление вашей пати для командных дуэлей
 permissions:
   xorealis.duels.reload:
     description: Дает доступ к комманде /duels reload
