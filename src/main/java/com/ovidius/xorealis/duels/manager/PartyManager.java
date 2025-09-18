@@ -15,6 +15,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PartyManager {
 
+    private static final int MAX_PARTY_SIZE = 8;
+
     private final Map<UUID, Party> playerPartyMap = new HashMap<>();
 
     private final Map<UUID, Party> invites = new HashMap<>();
@@ -81,12 +83,21 @@ public class PartyManager {
             return;
         }
 
+        if(party.getSize()>= MAX_PARTY_SIZE){
+            player.sendMessage(ChatColor.RED+"Не удалось присоедениться. Пати "+leader.getName()+
+                    "уже заполнена");
+            leader.sendMessage(ChatColor.RED+"Игрок "+player.getName()+
+                    "не смог присоединиться, так как ваша пати заполнена");
+            invites.remove(player.getUniqueId());
+            party.removeInvite(player);
+            return;
+        }
         party.removeInvite(player);
         invites.remove(player.getUniqueId());
         party.addMember(player);
         playerPartyMap.put(player.getUniqueId(), party);
 
-        party.broadcast(ChatColor.RED + "Игрок " + player.getName() + " присоединился к пати!");
+        party.broadcast(ChatColor.GREEN+"Игрок "+player.getName()+" присоединился к пати! ("+ChatColor.YELLOW+party.getSize()+"/"+ChatColor.BOLD+ChatColor.WHITE+MAX_PARTY_SIZE+ChatColor.GREEN+")");
     }
 
     public void disbandParty(Party party) {

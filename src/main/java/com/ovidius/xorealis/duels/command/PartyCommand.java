@@ -33,6 +33,11 @@ public class PartyCommand implements CommandExecutor {
 
         String subCommand = args[0].toLowerCase();
 
+        if(subCommand.equals("help")) {
+            sendHelpMessage(player);
+            return true;
+        }
+
         switch (subCommand) {
             case "create":
                 plugin.getPartyManager().createParty(player);
@@ -107,21 +112,24 @@ public class PartyCommand implements CommandExecutor {
                 break;
 
             default:
-                player.sendMessage("§cНеизвестная подкоманда.");
+                player.sendMessage("§cНеизвестная подкоманда. Используйте /party help для списка комманд");
                 break;
         }
 
         return true;
     }
     private void sendHelpMessage(Player player) {
-        player.sendMessage("§6--- Команды Пати ---");
-        player.sendMessage("§e/party create §7- Создать пати.");
-        player.sendMessage("§e/party invite <игрок> §7- Пригласить игрока.");
-        player.sendMessage("§e/party accept <игрок> §7- Принять приглашение.");
-        player.sendMessage("§e/party leave §7- Покинуть пати.");
-        player.sendMessage("§e/party kick <игрок> §7- (Лидер) Исключить игрока.");
-        player.sendMessage("§e/party disband §7- (Лидер) Распустить пати.");
-        player.sendMessage("§e/party list §7- Показать список участников.");
+        player.sendMessage("§8§m                                                                                ");
+        player.sendMessage("§6§lXorealis Duels - Команды Пати");
+        player.sendMessage("");
+        player.sendMessage("§e/party create §7- Создать свою пати.");
+        player.sendMessage("§e/party invite <игрок> §7- Пригласить игрока в пати.");
+        player.sendMessage("§e/party accept <игрок> §7- Принять приглашение от игрока.");
+        player.sendMessage("§e/party leave §7- Покинуть текущую пати.");
+        player.sendMessage("§e/party kick <игрок> §7- (Лидер) Исключить игрока из пати.");
+        player.sendMessage("§e/party disband §7- (Лидер) Распустить свою пати.");
+        player.sendMessage("§e/party list §7- Показать список участников пати.");
+        player.sendMessage("§8§m                                                                                ");
     }
 
 }
