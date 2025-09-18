@@ -4,6 +4,7 @@ import com.ovidius.xorealis.duels.XorealisDuels;
 import com.ovidius.xorealis.duels.object.Arena;
 import lombok.AllArgsConstructor;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
@@ -26,41 +27,47 @@ public class ArenaManager {
     public void loadArenas() {
         arenas.clear();
         File arenasFile = new File(plugin.getDataFolder(), "arenas.yml");
+        if (!arenasFile.exists()) {
+            plugin.saveResource("arenas.yml", false);
+        }
 
         FileConfiguration config = YamlConfiguration.loadConfiguration(arenasFile);
-        ConfigurationSection section = config.getConfigurationSection("arenas");
-        if (section == null) {
-            plugin.getLogger().warning("Arenas configuration not found");
+
+
+        String worldName = config.getString("duel_world", "world");
+        World world = Bukkit.getWorld(worldName);
+
+        if (world == null) {
+            plugin.getLogger().severe("=============================================");
+            plugin.getLogger().severe("КРИТИЧЕСКАЯ ОШИБКА: Мир для дуэлей '" + worldName + "' не найден!");
+            plugin.getLogger().severe("Ни одна арена не будет загружена.");
+            plugin.getLogger().severe("=============================================");
             return;
         }
+
+        ConfigurationSection section = config.getConfigurationSection("arenas");
+        if (section == null) {
+            plugin.getLogger().warning("Секция 'arenas' не найдена в arenas.yml!");
+            return;
+        }
+
         for (String arenaId : section.getKeys(false)) {
             try {
-                String worldName = section.getString(arenaId + ".world");
-                World world = Bukkit.getWorld(worldName);
-                if (world == null) {
-                    plugin.getLogger().severe("World '" + worldName + "' for arena '" + arenaId + "' not found");
-                    continue;
-                }
-                Location spawn1 = parseLocation(
-                        world,
-                        section.getConfigurationSection(arenaId + ".spawn-1"));
-                Location spawn2 = parseLocation(
-                        world,
-                        section.getConfigurationSection(arenaId + ".spawn-2"));
-                Arena arena = new Arena(worldName, spawn1, spawn2);
-                arenas.add(arena);
-                plugin.getLogger().info("Loaded arena '" + arenaId + "'");
+                String displayName = ChatColor.translateAlternateColorCodes('&', section.getString(arenaId + ".display-name", arenaId));
+                Location spawn1 = parseLocation(world, section.getConfigurationSection(arenaId + ".spawn-1"));
+                Location spawn2 = parseLocation(world, section.getConfigurationSection(arenaId + ".spawn-2"));
 
-            }catch (Exception e){
-                plugin.getLogger().log(Level.SEVERE, "Error loading arena '" + arenaId + "'", e);
+                Arena arena = new Arena(arenaId, displayName, spawn1, spawn2);
+                arenas.add(arena);
+                plugin.getLogger().info("Успешно загружена арена: " + arenaId + " в мире " + worldName);
+
+            } catch (Exception e) {
+                plugin.getLogger().log(Level.SEVERE, "Ошибка при загрузке арены с ID: " + arenaId, e);
             }
         }
-        if (arenas.isEmpty()) {
-            plugin.getLogger().log(Level.SEVERE, "==================================================");
-            plugin.getLogger().log(Level.SEVERE, "НИ ОДНОЙ АРЕНЫ НЕ БЫЛО ЗАГРУЖЕНО!");
-            plugin.getLogger().log(Level.SEVERE, "Пожалуйста, проверьте ваш файл arenas.yml.");
-            plugin.getLogger().log(Level.SEVERE, "Убедитесь, что миры, указанные в конфиге, существуют и загружены.");
-            plugin.getLogger().log(Level.SEVERE, "==================================================");
+
+        if(arenas.isEmpty()) {
+            plugin.getLogger().warning("Внимание: Ни одной арены не было найдено в файле arenas.yml");
         } else {
             plugin.getLogger().info("Загружено " + arenas.size() + " арен.");
         }

@@ -6,18 +6,20 @@ import org.bukkit.Location;
 
 @Getter
 public class Arena {
+
     private final String id;
+    private final String displayName;
     private final Location spawn1;
     private final Location spawn2;
-    @Setter
-    private ArenaState state;
 
-    public Arena(String id, Location spawn1, Location spawn2) {
+    @Setter private ArenaState state;
+
+    // Конструктор теперь принимает displayName
+    public Arena(String id, String displayName, Location spawn1, Location spawn2) {
         this.id = id;
+        this.displayName = displayName;
         this.spawn1 = spawn1;
         this.spawn2 = spawn2;
         this.state = ArenaState.AVAILABLE;
     }
-
-
 }

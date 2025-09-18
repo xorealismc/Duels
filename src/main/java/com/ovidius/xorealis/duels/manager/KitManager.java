@@ -136,7 +136,9 @@ public class KitManager {
 
 
     public Optional<Kit> getKitTemplate(String id) {
-        return Optional.ofNullable(kitTemplates.get(id));
+        return kitTemplates.values().stream()
+                .filter(kit -> kit.getId().equalsIgnoreCase(id))
+                .findFirst();
     }
 
 
