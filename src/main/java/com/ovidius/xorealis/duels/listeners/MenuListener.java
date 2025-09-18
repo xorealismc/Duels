@@ -1,5 +1,6 @@
 package com.ovidius.xorealis.duels.listeners;
 
+import com.ovidius.xorealis.duels.util.SoundUtil;
 import com.ovidius.xorealis.duels.XorealisDuels;
 import com.ovidius.xorealis.duels.manager.MenuManager;
 import com.ovidius.xorealis.duels.object.Arena;
@@ -35,6 +36,8 @@ public class MenuListener implements Listener {
         ItemStack clickedItem = e.getCurrentItem();
         if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
 
+        SoundUtil.playSuccessClick(player);
+
         switch (e.getSlot()) {
             case MenuManager.SLOT_ONE_VS_ONE:
                 XorealisDuels.getInstance().getMenuManager().openKitSelectorMenu(player);
@@ -55,6 +58,9 @@ public class MenuListener implements Listener {
         Player player = (Player) e.getWhoClicked();
         ItemStack clickedItem = e.getCurrentItem();
         if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
+
+        SoundUtil.playSuccessClick(player);
+
 
         String kitDisplayName = clickedItem.getItemMeta().getDisplayName();
         Optional<Kit> kitOpt = XorealisDuels.getInstance().getKitManager().getAllKitTemplates().stream()

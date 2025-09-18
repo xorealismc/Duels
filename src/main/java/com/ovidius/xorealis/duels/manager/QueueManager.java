@@ -3,6 +3,7 @@ package com.ovidius.xorealis.duels.manager;
 import com.ovidius.xorealis.duels.XorealisDuels;
 import com.ovidius.xorealis.duels.object.Arena;
 import com.ovidius.xorealis.duels.object.Kit;
+import com.ovidius.xorealis.duels.util.SoundUtil;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.ChatColor;
@@ -28,9 +29,11 @@ public class QueueManager {
         if(!queue.contains(playerUUID)) {
             queue.add(playerUUID);
             player.sendMessage("§aВы встали в очередь для дуэли 1v1 с китом: " + kit.getDisplayName());
+            SoundUtil.playSuccessClick(player);
             checkForMatches(kitId);
         }else {
             player.sendMessage("§eВы уже находитесь в этой очереди.");
+            SoundUtil.playErrorClick(player);
         }
     }
 

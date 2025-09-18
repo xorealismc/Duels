@@ -3,9 +3,11 @@ package com.ovidius.xorealis.duels.manager;
 import com.ovidius.xorealis.duels.XorealisDuels;
 import com.ovidius.xorealis.duels.listeners.PlayerListener;
 import com.ovidius.xorealis.duels.object.*;
+import com.ovidius.xorealis.duels.util.SoundUtil;
 import lombok.AllArgsConstructor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -74,14 +76,22 @@ public class DuelManager implements Listener {
                 if (duel.getState() != DuelState.STARTING) {this.cancel();return;}
 
                 if (countdown > 0) {
-                    duel.getPlayer1().sendTitle("§a" + countdown, "", 5, 20, 5);
-                    duel.getPlayer2().sendTitle("§a" + countdown, "", 5, 20, 5);
+                    String title = "§a" + countdown;
+
+                    SoundUtil.playCountdownTick(duel.getPlayer1());
+                    SoundUtil.playCountdownTick(duel.getPlayer2());
+
+                    duel.getPlayer1().sendTitle(title, "", 0, 15, 3);
+                    duel.getPlayer2().sendTitle(title, "", 0, 15, 3);
                     countdown--;
                 } else {
                     this.cancel();
                     duel.setState(DuelState.ACTIVE);
-                    duel.getPlayer1().sendTitle("§cБой!", "", 5, 15, 5);
-                    duel.getPlayer2().sendTitle("§cБой!", "", 5, 15, 5);
+                    SoundUtil.playDuelStart(duel.getPlayer1());
+                    SoundUtil.playDuelStart(duel.getPlayer2());
+
+                    duel.getPlayer1().sendTitle("§cБой!", "", 3, 15, 3);
+                    duel.getPlayer2().sendTitle("§cБой!", "", 3, 15, 3);
 
                     applyKits(duel);
                     countdownTasks.remove(duel);
@@ -121,8 +131,11 @@ public class DuelManager implements Listener {
         if (duel.getState() == DuelState.ENDING) return;
         duel.setState(DuelState.ENDING);
 
-        winner.sendMessage("§a Вы победили в дуэли против " + loser.getName() + "!");
-        loser.sendMessage("§cВы проиграли дуэль против " + winner.getName() + "!");
+        winner.sendTitle("§6ПОБЕДА!", "§7Вы одолели " + loser.getName(), 10, 40, 10);
+        winner.playSound(winner.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
+
+        loser.sendTitle("§cПОРАЖЕНИЕ", "§7Вас одолел " + winner.getName(), 10, 40, 10);
+        loser.playSound(loser.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
 
         new BukkitRunnable() {
             @Override
