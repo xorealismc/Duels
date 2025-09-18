@@ -3,6 +3,7 @@ package com.ovidius.xorealis.duels.manager;
 import com.ovidius.xorealis.duels.XorealisDuels;
 import com.ovidius.xorealis.duels.listeners.PlayerListener;
 import com.ovidius.xorealis.duels.object.*;
+import com.ovidius.xorealis.duels.util.EloUtil;
 import com.ovidius.xorealis.duels.util.SoundUtil;
 import lombok.AllArgsConstructor;
 import org.bukkit.GameMode;
@@ -163,7 +164,30 @@ public class DuelManager implements Listener {
         if (duel.getState() == DuelState.ENDING) return;
         duel.setState(DuelState.ENDING);
 
+        PlayerData winnerData = plugin.getPlayerDataManager().loadPlayerData(winner.getUniqueId());
+        PlayerData loserData = plugin.getPlayerDataManager().loadPlayerData(loser.getUniqueId());
 
+        int winnerOldElo = winnerData.getElo(1);
+        int loserOldElo = loserData.getElo(1);
+
+        int winnerNewElo = EloUtil.calculateNewRating(winnerOldElo, loserOldElo, 1.0);
+        int loserNewElo = EloUtil.calculateNewRating(loserOldElo, winnerOldElo, 0.0);
+
+        int eloChange = winnerNewElo - winnerOldElo;
+
+        int loserEloChange = loserNewElo - loserOldElo;
+
+        winnerData.setElo(1, winnerNewElo);
+        winnerData.setWins(winnerData.getWins() + 1);
+        winnerData.setKills(winnerData.getKills() + 1);
+        winnerData.setWinstreak(winnerData.getWinstreak() + 1);
+
+        loserData.setElo(1, loserNewElo);
+        loserData.setLosses(loserData.getLosses() + 1);
+        loserData.setWinstreak(0);
+
+        plugin.getPlayerDataManager().savePlayerData(winner.getUniqueId(), winnerData);
+        plugin.getPlayerDataManager().savePlayerData(loser.getUniqueId(), loserData);
 
         winner.sendTitle("§6ПОБЕДА!", "§7Вы одолели " + loser.getName(), 10, 40, 10);
         winner.playSound(winner.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
@@ -172,6 +196,9 @@ public class DuelManager implements Listener {
         loser.sendTitle("§cПОРАЖЕНИЕ", "§7Вас одолел " + winner.getName(), 10, 40, 10);
         loser.playSound(loser.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
         SoundUtil.playDefeatParticles(loser);
+
+        winner.sendMessage("§a... (§6+" + eloChange + " ELO§a)");
+        loser.sendMessage("§c... (§6-" + eloChange + " ELO§c)");
 
         new BukkitRunnable() {
             @Override

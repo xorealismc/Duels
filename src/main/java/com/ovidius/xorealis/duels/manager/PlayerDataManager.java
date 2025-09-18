@@ -1,9 +1,11 @@
 package com.ovidius.xorealis.duels.manager;
 
 import com.ovidius.xorealis.duels.XorealisDuels;
+import com.ovidius.xorealis.duels.object.PlayerData;
 import com.ovidius.xorealis.duels.object.PlayerKitLayout;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
@@ -18,6 +20,12 @@ public class PlayerDataManager {
     private final XorealisDuels plugin;
     private final File playerDataFolder;
 
+    static {
+        ConfigurationSerialization.registerClass(PlayerData.class, "PlayerData");
+        ConfigurationSerialization.registerClass(PlayerKitLayout.class, "PlayerKitLayout");
+    }
+
+
     public PlayerDataManager(XorealisDuels plugin){
         this.plugin = plugin;
         playerDataFolder = new File(plugin.getDataFolder(), "playerdata");
@@ -29,50 +37,45 @@ public class PlayerDataManager {
         return new File(playerDataFolder, uuid.toString() + ".yml");
     }
 
-    public void savePlayerLayout(UUID uuid, String kitId, PlayerKitLayout layout){
-        File playerFile = getPlayerFile(uuid);
-        FileConfiguration config = YamlConfiguration.loadConfiguration(playerFile);
-        String path = "layouts."+kitId;
-        config.set(path+".inventory-contents",layout.inventoryContents());
-        config.set(path+".armor-contents",layout.armorContents());
-
-        try{
-            config.save(playerFile);
-        }catch (IOException e){
-            plugin.getLogger().log(Level.SEVERE, "Could not save player data for "+uuid,e);
-        }
-    }
-    public Optional<PlayerKitLayout> loadPlayerLayout(UUID uuid,String kitId){
-        File playerFile = getPlayerFile(uuid);
-        if(!playerFile.exists()) return Optional.empty();
-
-        FileConfiguration config = YamlConfiguration.loadConfiguration(playerFile);
-        String path = "layouts."+kitId;
-
-        if(!config.contains(path))return Optional.empty();
-
-        List<?> rawInventory = config.getList(path+".inventory-contents");
-        List<?> rawArmor = config.getList(path+".armor-contents");
-
-        if(rawInventory == null || rawArmor == null) return Optional.empty();
-
-        ItemStack[] inventory = rawInventory.toArray(new ItemStack[0]);
-        ItemStack[] armor = rawArmor.toArray(new ItemStack[0]);
-
-        return Optional.of(new PlayerKitLayout(inventory,armor));
+    private FileConfiguration getPlayerConfig(UUID uuid) {
+        File playerFile = new File(playerDataFolder, uuid + ".yml");
+        return YamlConfiguration.loadConfiguration(playerFile);
     }
 
-    public void deletePlayerLayout(UUID uuid,String kitId){
-        File playerFile = getPlayerFile(uuid);
-        if(!playerFile.exists()) return;
-
-        FileConfiguration config = YamlConfiguration.loadConfiguration(playerFile);
-        config.set("layouts."+kitId,null);
+    private void savePlayerConfig(UUID uuid, FileConfiguration config) {
         try {
-            config.save(playerFile);
-        }catch (IOException e){
-            plugin.getLogger().log(Level.SEVERE, "Could not save player data for "+uuid,e);
+            config.save(new File(playerDataFolder, uuid + ".yml"));
+        } catch (IOException e) {
+            plugin.getLogger().log(Level.SEVERE, "Не удалось сохранить данные для игрока " + uuid, e);
         }
+    }
+
+    public PlayerData loadPlayerData(UUID uuid) {
+        FileConfiguration config = getPlayerConfig(uuid);
+        PlayerData data = config.getSerializable("stats", PlayerData.class);
+        return data != null ? data : new PlayerData();
+    }
+
+    public void savePlayerData(UUID uuid, PlayerData data) {
+        FileConfiguration config = getPlayerConfig(uuid);
+        config.set("stats", data);
+        savePlayerConfig(uuid, config);
+    }
+
+    public void savePlayerLayout(UUID uuid, String kitId, PlayerKitLayout layout) {
+        FileConfiguration config = getPlayerConfig(uuid);
+        config.set("layouts." + kitId, layout);
+        savePlayerConfig(uuid, config);
+    }
+
+    public Optional<PlayerKitLayout> loadPlayerLayout(UUID uuid, String kitId) {
+        return Optional.ofNullable(getPlayerConfig(uuid).getSerializable("layouts." + kitId, PlayerKitLayout.class));
+    }
+
+    public void deletePlayerLayout(UUID uuid, String kitId) {
+        FileConfiguration config = getPlayerConfig(uuid);
+        config.set("layouts." + kitId, null);
+        savePlayerConfig(uuid, config);
     }
 
 }
