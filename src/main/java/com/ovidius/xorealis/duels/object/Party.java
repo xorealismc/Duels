@@ -1,6 +1,7 @@
 package com.ovidius.xorealis.duels.object;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -9,8 +10,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Getter
+@Setter
 public class Party {
-    private final UUID leader;
+    private UUID leader;
     private final Set<UUID> members = new HashSet<>();
     private final Map<UUID,Long> pendingInvites = new ConcurrentHashMap<>();
 
@@ -54,6 +56,7 @@ public class Party {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
     }
+
 
     public void broadcast(String message) {
         getOnlineMembers().forEach(player -> player.sendMessage(message));

@@ -22,3 +22,9 @@ permissions:
   xorealis.duels.reload:
     description: Дает доступ к комманде /duels reload
     default: op
+  xorealis.duels.forcestop:
+    description: Дает доступ к комманде /duels forcestop
+    default: op
+  xorealis.duels.forcestart:
+    description: Дает доступ к комманде /duels forcestart
+    default: op

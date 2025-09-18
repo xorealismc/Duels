@@ -15,7 +15,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PartyManager {
 
-    private static final int MAX_PARTY_SIZE = 8;
+    public static final int MAX_PARTY_SIZE = 8;
 
     private final Map<UUID, Party> playerPartyMap = new HashMap<>();
 
@@ -37,10 +37,9 @@ public class PartyManager {
 
     public void inviteParty(Player leader, Player target) {
         Optional<Party> partyOpt = getParty(leader);
-
         if (partyOpt.isEmpty()) {
-            leader.sendMessage(ChatColor.RED + "Только лидер пати может приглашать игроков");
-            return;
+            createParty(leader);
+            partyOpt = getParty(leader);
         }
         Party party = partyOpt.get();
 
@@ -67,6 +66,25 @@ public class PartyManager {
         message.addExtra("\n" + ChatColor.YELLOW + "----------------------------------");
 
         target.spigot().sendMessage(message);
+    }
+    public void promotePlayer(Player currentLeader, Player newLeader) {
+        getParty(currentLeader).ifPresent(party -> {
+            if (!party.isLeader(currentLeader)) {
+                currentLeader.sendMessage("§cВы не лидер этой пати.");
+                return;
+            }
+            if (!party.isMember(newLeader)) {
+                currentLeader.sendMessage("§cИгрок " + newLeader.getName() + " не состоит в вашей пати.");
+                return;
+            }
+            if (currentLeader.equals(newLeader)) {
+                currentLeader.sendMessage("§cВы уже являетесь лидером.");
+                return;
+            }
+
+            party.setLeader(newLeader.getUniqueId());
+            party.broadcast("§eИгрок " + newLeader.getName() + " был назначен новым лидером пати!");
+        });
     }
 
     public void acceptInvite(Player player, Player leader) {

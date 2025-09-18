@@ -6,7 +6,7 @@ import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.bukkit.OfflinePlayer;
+import com.ovidius.xorealis.duels.manager.PartyManager;
 import org.bukkit.entity.Player;
 
 import java.util.Optional;
@@ -46,30 +46,41 @@ public class PartyPlaceholders extends PlaceholderExpansion {
         if (player == null) return "";
 
         Optional<Party> partyOpt = plugin.getPartyManager().getParty(player);
-        if (partyOpt.isEmpty()) return "Не в пати";
+
+        if(params.equalsIgnoreCase("party_exists")){
+            return partyOpt.isPresent() ? "yes" : "no";
+        }
+
+        if (partyOpt.isEmpty()) {
+            if(params.equalsIgnoreCase("party_display_name")) return "§eОдиночная игра";
+            if(params.equalsIgnoreCase("party_list_1")) return "§7- " + player.getName();
+            return "";
+        }
+
         Party party = partyOpt.get();
-        switch (params.toLowerCase()) {
-            case "party_leader":
-                return Bukkit.getOfflinePlayer(party.getLeader()).getName();
-            case "party_size":
-                return String.valueOf(party.getSize());
-            case "party_member_list":
+
+        if(params.equalsIgnoreCase("party_display_name")) {
+            return "§aПати (" + party.getSize() + "/" + PartyManager.MAX_PARTY_SIZE + ")";
+        }
+
+        if(params.startsWith("party_list_")) {
+            try {
+                int index = Integer.parseInt(params.substring(params.length() - 1)) - 1;
+
                 return party.getOnlineMembers().stream()
-                        .map(Player::getName)
-                        .collect(Collectors.joining(", "));
-            case "party_member_1":
-            case "party_member_2":
-            case "party_member_3":
-                try{
-                    int index = Integer.parseInt(params.substring(params.length()-1))-1;
-                    return party.getOnlineMembers().stream()
-                            .skip(index)
-                            .findFirst()
-                            .map(Player::getName)
-                            .orElse("");
-                }catch (Exception e){
-                    return "";
-                }
+                        .skip(index)
+                        .findFirst()
+                        .map(member -> {
+                            if (party.isLeader(member)) {
+                                return "§6☆ §f" + member.getName(); // ☆ Лидер
+                            } else {
+                                return "§7- §f" + member.getName(); // - Участник
+                            }
+                        })
+                        .orElse("");
+            } catch (Exception e) {
+                return "";
+            }
         }
         return null;
     }

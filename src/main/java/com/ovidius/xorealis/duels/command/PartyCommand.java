@@ -33,7 +33,7 @@ public class PartyCommand implements CommandExecutor {
 
         String subCommand = args[0].toLowerCase();
 
-        if(subCommand.equals("help")) {
+        if (subCommand.equals("help")) {
             sendHelpMessage(player);
             return true;
         }
@@ -92,7 +92,20 @@ public class PartyCommand implements CommandExecutor {
                     break;
                 }
                 plugin.getPartyManager().kickPlayer(player, targetToKick);
+            case "promote":
+            case "leader":
+                if (args.length < 2) {
+                    player.sendMessage("§cИспользование: /party promote <игрок>");
+                    break;
+                }
+                Player newLeader = Bukkit.getPlayer(args[1]);
+                if (newLeader == null) {
+                    player.sendMessage("§cИгрок не найден.");
+                    break;
+                }
+                plugin.getPartyManager().promotePlayer(player, newLeader);
                 break;
+
 
             case "list":
                 partyManager.getParty(player).ifPresentOrElse(
@@ -118,6 +131,7 @@ public class PartyCommand implements CommandExecutor {
 
         return true;
     }
+
     private void sendHelpMessage(Player player) {
         player.sendMessage("§8§m                                                                                ");
         player.sendMessage("§6§lXorealis Duels - Команды Пати");

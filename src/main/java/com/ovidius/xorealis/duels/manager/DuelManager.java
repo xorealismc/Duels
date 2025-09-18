@@ -17,6 +17,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,6 +45,37 @@ public class DuelManager implements Listener {
         activeDuels.put(player2.getUniqueId(), duel);
 
         startCountdown(duel);
+    }
+    public void forceStopDuel(Player player, @Nullable String admin) {
+        Duel duel = activeDuels.get(player.getUniqueId());
+        if (duel == null) return;
+
+        Player opponent = duel.getOpponent(player);
+
+        if(admin != null) {
+            duel.getPlayer1().sendMessage("§cВаша дуэль была принудительно остановлена администратором " + admin + ".");
+            duel.getPlayer2().sendMessage("§cВаша дуэль была принудительно остановлена администратором " + admin + ".");
+        }
+
+        endDuelAsDraw(duel);
+    }
+
+    private void endDuelAsDraw(Duel duel) {
+        if (duel.getState() == DuelState.ENDING) return;
+        duel.setState(DuelState.ENDING);
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                restorePlayer(duel.getPlayer1());
+                restorePlayer(duel.getPlayer2());
+
+                activeDuels.remove(duel.getPlayer1().getUniqueId());
+                activeDuels.remove(duel.getPlayer2().getUniqueId());
+
+                duel.getArena().setState(ArenaState.AVAILABLE);
+            }
+        }.runTaskLater(plugin, 20L);
     }
 
     private void preparePlayer(Player player, Location spawnPoint) {
@@ -131,11 +163,15 @@ public class DuelManager implements Listener {
         if (duel.getState() == DuelState.ENDING) return;
         duel.setState(DuelState.ENDING);
 
+
+
         winner.sendTitle("§6ПОБЕДА!", "§7Вы одолели " + loser.getName(), 10, 40, 10);
         winner.playSound(winner.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
+        SoundUtil.spawnVictoryFireworks(winner);
 
         loser.sendTitle("§cПОРАЖЕНИЕ", "§7Вас одолел " + winner.getName(), 10, 40, 10);
         loser.playSound(loser.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+        SoundUtil.playDefeatParticles(loser);
 
         new BukkitRunnable() {
             @Override
