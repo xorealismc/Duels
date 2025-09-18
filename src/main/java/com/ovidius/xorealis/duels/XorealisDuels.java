@@ -7,6 +7,7 @@ import com.ovidius.xorealis.duels.listeners.DuelProtectionListener;
 import com.ovidius.xorealis.duels.listeners.MenuListener;
 import com.ovidius.xorealis.duels.listeners.PlayerListener;
 import com.ovidius.xorealis.duels.manager.*;
+import com.ovidius.xorealis.duels.papi.PartyPlaceholders;
 import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
 @Getter
@@ -38,6 +39,11 @@ public final class XorealisDuels extends JavaPlugin {
         loadCommands();
 
         getLogger().info("XorealisDuels has been enabled successfully.");
+
+        if(getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new PartyPlaceholders(this).register();
+            getLogger().info("PlaceholderAPI has been registered.");
+        }
     }
 
     @Override
