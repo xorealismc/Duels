@@ -58,7 +58,7 @@ public final class XorealisDuels extends JavaPlugin {
         playerDataManager = new PlayerDataManager(this);
         queueManager = new QueueManager(this);
         duelManager = new DuelManager(this);
-        partyManager = new PartyManager();
+        partyManager = new PartyManager(this);
 
         arenaManager.loadArenas();
         kitManager.loadKits();
@@ -75,6 +75,9 @@ public final class XorealisDuels extends JavaPlugin {
     private void loadCommands() {
         getCommand("leavequeue").setExecutor(new LeaveQueueCommand(this));
         getCommand("duels").setExecutor(new DuelsCommand(this));
-        getCommand("party").setExecutor(new PartyCommand(this));
+
+        PartyCommand partyCommand = new PartyCommand(this);
+        getCommand("party").setExecutor(partyCommand);
+        getCommand("party").setTabCompleter(partyCommand);
     }
 }

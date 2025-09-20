@@ -1,6 +1,7 @@
 package com.ovidius.xorealis.duels.manager;
 
 import com.ovidius.xorealis.duels.XorealisDuels;
+import com.ovidius.xorealis.duels.object.GameModeType;
 import com.ovidius.xorealis.duels.object.Kit;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -28,13 +29,14 @@ public class MenuManager {
 
     }
 
-    public void openKitSelectorMenu(Player player) {
+    public void openKitSelectorMenu(Player player, GameModeType mode) {
         Collection<Kit> allKits = XorealisDuels.getInstance().getKitManager().getAllKitTemplates();
         int size = ((allKits.size() + 8) / 9) * 9;
         size = Math.max(9, size);
+        String title = ChatColor.DARK_GRAY + KIT_SELECTOR_TITLE + " (" + mode.name() + ")";
         boolean isInParty = XorealisDuels.getInstance().getPartyManager().getParty(player).isPresent();
 
-        Inventory kitSelectorMenu = Bukkit.createInventory(null, size, ChatColor.DARK_GRAY + KIT_SELECTOR_TITLE);
+        Inventory kitSelectorMenu = Bukkit.createInventory(null, size, title);
         for (Kit kit : allKits) {
             ItemStack icon = kit.getIcon().clone();
             ItemMeta meta = icon.getItemMeta();

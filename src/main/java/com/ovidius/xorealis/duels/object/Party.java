@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 @Setter
 public class Party {
     private UUID leader;
-    private final Set<UUID> members = new HashSet<>();
+    private final Set<UUID> members = new LinkedHashSet<>();
     private final Map<UUID,Long> pendingInvites = new ConcurrentHashMap<>();
 
     public Party(Player leader) {

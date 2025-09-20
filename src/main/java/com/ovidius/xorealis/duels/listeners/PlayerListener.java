@@ -14,12 +14,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -32,7 +28,6 @@ public class PlayerListener implements Listener {
     private final Map<UUID, ItemStack[]> inventoryCache = new HashMap<>();
     private final Map<UUID, ItemStack[]> armorCache = new HashMap<>();
     private final Map<UUID, String> editingKit = new HashMap<>();
-
     private final List<Material> editorControlItems = List.of(Material.EMERALD_BLOCK, Material.TNT, Material.REDSTONE_BLOCK);
 
     public PlayerListener(XorealisDuels plugin) {
@@ -41,7 +36,6 @@ public class PlayerListener implements Listener {
 
     public void setLobbyState(Player player) {
         playersInLobby.add(player.getUniqueId());
-
         player.getInventory().clear();
         player.getInventory().setArmorContents(null);
         player.setHealth(20.0);
@@ -51,7 +45,6 @@ public class PlayerListener implements Listener {
         player.setLevel(0);
         player.setGameMode(GameMode.ADVENTURE);
         player.getActivePotionEffects().forEach(effect -> player.removePotionEffect(effect.getType()));
-
         giveLobbyItems(player);
     }
 
@@ -62,11 +55,9 @@ public class PlayerListener implements Listener {
     public void enterEditMode(Player player, Kit kit) {
         player.closeInventory();
         removeLobbyState(player);
-
         inventoryCache.put(player.getUniqueId(), player.getInventory().getContents());
         armorCache.put(player.getUniqueId(), player.getInventory().getArmorContents());
         editingKit.put(player.getUniqueId(), kit.getId());
-
         player.setGameMode(GameMode.ADVENTURE);
         player.getInventory().clear();
 
@@ -80,59 +71,55 @@ public class PlayerListener implements Listener {
                 });
 
         giveEditorControls(player);
-        player.sendMessage("§aВы вошли в режим редактирования. Нажмите ПКМ по кнопкам в хотбаре для управления.");
+        player.sendMessage("§aYou have entered edit mode. Right-click the items in your hotbar.");
     }
+
     public void exitEditMode(Player player) {
         UUID uuid = player.getUniqueId();
         if (inventoryCache.containsKey(uuid)) {
             player.getInventory().clear();
             player.getInventory().setContents(inventoryCache.get(uuid));
             player.getInventory().setArmorContents(armorCache.get(uuid));
-
             inventoryCache.remove(uuid);
             armorCache.remove(uuid);
             editingKit.remove(uuid);
         }
         setLobbyState(player);
     }
-    public boolean isEditing(Player player) { return editingKit.containsKey(player.getUniqueId()); }
+
+    public boolean isEditing(Player player) {
+        return editingKit.containsKey(player.getUniqueId());
+    }
 
     private void giveLobbyItems(Player player) {
         ItemStack compass = new ItemStack(Material.COMPASS);
         ItemMeta meta = compass.getItemMeta();
-        if(meta == null) return;
-        meta.setDisplayName(ChatColor.GREEN + "Меню Дуэлей " + ChatColor.GRAY + "(ПКМ)");
-        meta.setLore(List.of("§7Нажмите, чтобы открыть меню", "§7выбора режимов."));
+        if (meta == null) return;
+        meta.setDisplayName("§aМеню Дуэлей §7(ПКМ)");
+        meta.setLore(List.of("§7Нажмите, чтобы открыть меню."));
         compass.setItemMeta(meta);
         player.getInventory().setItem(0, compass);
     }
 
     private void giveEditorControls(Player player) {
-        player.getInventory().setItem(8, MenuManager.createMenuItem(Material.EMERALD_BLOCK, "§aСохранить и Выйти", List.of("§7Сохраняет текущую раскладку.")));
-        player.getInventory().setItem(7, MenuManager.createMenuItem(Material.TNT, "§cСбросить", List.of("§7Восстанавливает кит по умолчанию.")));
+        player.getInventory().setItem(8, MenuManager.createMenuItem(Material.EMERALD_BLOCK, "§aSave & Exit", List.of("§7Saves the current layout.")));
+        player.getInventory().setItem(7, MenuManager.createMenuItem(Material.TNT, "§cReset", List.of("§7Resets to the default layout.")));
     }
 
     @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent e) { setLobbyState(e.getPlayer()); }
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        setLobbyState(event.getPlayer());
+    }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent e) {
         Player player = e.getPlayer();
-        plugin.getPartyManager().getParty(player).ifPresent(party -> {
-            if(party.isLeader(player)) {
-                plugin.getPartyManager().disbandParty(party);
-            } else {
-                party.removeMember(player);
-                party.broadcast("§eИгрок " + player.getName() + " покинул пати (вышел из игры).");
-            }
-        });
-        if(isEditing(e.getPlayer())) {
-            exitEditMode(e.getPlayer());
+        if(isEditing(player)) {
+            exitEditMode(player);
         }
-        playersInLobby.remove(e.getPlayer().getUniqueId());
-        plugin.getQueueManager().removePlayerFromAllQueues(e.getPlayer().getUniqueId());
+        playersInLobby.remove(player.getUniqueId());
+        plugin.getQueueManager().removeAllQueues(player.getUniqueId());
     }
-
 
     @EventHandler
     public void onPlayerDropItem(PlayerDropItemEvent e) {
@@ -142,7 +129,6 @@ public class PlayerListener implements Listener {
         }
     }
 
-
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent e) {
         Player player = e.getPlayer();
@@ -150,10 +136,12 @@ public class PlayerListener implements Listener {
 
         if (isEditing(player)) {
             handleEditorInteract(e);
-        } else if (playersInLobby.contains(player.getUniqueId())) {
+        }
+        else if (playersInLobby.contains(player.getUniqueId())) {
             handleLobbyInteract(e);
         }
     }
+
     private void handleLobbyInteract(PlayerInteractEvent e) {
         if (isDuelCompass(e.getItem())) {
             e.setCancelled(true);
@@ -182,6 +170,7 @@ public class PlayerListener implements Listener {
                 break;
         }
     }
+
     private void handleSaveKit(Player player, String kitId) {
         player.getInventory().setItem(7, null);
         player.getInventory().setItem(8, null);
@@ -191,16 +180,18 @@ public class PlayerListener implements Listener {
         PlayerKitLayout layout = new PlayerKitLayout(inv, armor);
 
         plugin.getPlayerDataManager().savePlayerLayout(player.getUniqueId(), kitId, layout);
-        player.sendMessage("§aРаскладка сохранена!");
+        player.sendMessage("§aLayout saved!");
         exitEditMode(player);
     }
+
     private void handleResetKit(Player player, String kitId) {
         plugin.getPlayerDataManager().deletePlayerLayout(player.getUniqueId(), kitId);
-        player.sendMessage("§eРаскладка сброшена!");
+        player.sendMessage("§eLayout reset!");
         exitEditMode(player);
 
         plugin.getKitManager().getKitTemplate(kitId).ifPresent(kit -> enterEditMode(player, kit));
     }
+
     @EventHandler
     public void onEditorInventoryClick(InventoryClickEvent e) {
         Player player = (Player) e.getWhoClicked();
@@ -213,47 +204,44 @@ public class PlayerListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onLobbyInventoryInteract(InventoryClickEvent event) {
-        if (!playersInLobby.contains(event.getWhoClicked().getUniqueId())) return;
-        if (event.getView().getTopInventory().getHolder() == null) {
+    public void onLobbyInventoryInteract(InventoryClickEvent e) {
+        if (!playersInLobby.contains(e.getWhoClicked().getUniqueId())) return;
+        if (e.getView().getTopInventory().getHolder() == null) {
             return;
         }
-        event.setCancelled(true);
+        e.setCancelled(true);
     }
 
-
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPlayerDeathInLobby(PlayerDeathEvent event) {
-        Player player = event.getEntity();
+    public void onPlayerDeathInLobby(PlayerDeathEvent e) {
+        Player player = e.getEntity();
         if (playersInLobby.contains(player.getUniqueId())) {
-            event.getDrops().clear();
-            event.setDeathMessage(null);
-            event.setKeepInventory(true);
-            event.setKeepLevel(true);
+            e.getDrops().clear();
+            e.setDeathMessage(null);
+            e.setKeepInventory(true);
+            e.setKeepLevel(true);
         }
     }
 
     @EventHandler
-    public void onPlayerRespawnInLobby(PlayerRespawnEvent event) {
-        Player player = event.getPlayer();
+    public void onPlayerRespawnInLobby(PlayerRespawnEvent e) {
+        Player player = e.getPlayer();
         if (playersInLobby.contains(player.getUniqueId())) {
             new BukkitRunnable() {
                 @Override
-                public void run() {
-                    setLobbyState(player);
-                }
+                public void run() { setLobbyState(player); }
             }.runTaskLater(plugin, 1L);
         }
     }
-
 
     private boolean isDuelCompass(ItemStack item) {
         if (item == null || item.getType() != Material.COMPASS) {
             return false;
         }
-        if (!item.hasItemMeta() || !item.getItemMeta().hasDisplayName()) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null || !meta.hasDisplayName()) {
             return false;
         }
-        return ChatColor.stripColor(item.getItemMeta().getDisplayName()).startsWith("Меню Дуэлей");
+        return ChatColor.stripColor(meta.getDisplayName()).startsWith("Меню Дуэлей");
     }
 }

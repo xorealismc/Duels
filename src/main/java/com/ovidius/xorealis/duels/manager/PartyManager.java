@@ -1,5 +1,8 @@
 package com.ovidius.xorealis.duels.manager;
 
+import com.ovidius.xorealis.duels.XorealisDuels;
+import com.ovidius.xorealis.duels.object.GameModeType;
+import com.ovidius.xorealis.duels.object.Kit;
 import com.ovidius.xorealis.duels.object.Party;
 import lombok.RequiredArgsConstructor;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -14,28 +17,63 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 public class PartyManager {
-
-    public static final int MAX_PARTY_SIZE = 8;
-
+    public static final int MAX_PARTY_SIZE = 6;
     private final Map<UUID, Party> playerPartyMap = new HashMap<>();
-
     private final Map<UUID, Party> invites = new HashMap<>();
+    private final XorealisDuels plugin;
+
+    public void attemptToQueue(Player player, Kit kit, GameModeType mode) {
+        Optional<Party> partyOpt = getParty(player);
+
+        if (mode == GameModeType.SOLO) {
+            if (partyOpt.isPresent()) {
+                player.sendMessage("§cДля поиска одиночной игры, пожалуйста, покиньте пати.");
+                player.closeInventory();
+                return;
+            }
+            plugin.getQueueManager().addPlayerToQueue(player, kit, mode);
+
+        } else {
+            if (partyOpt.isEmpty()) {
+                player.sendMessage("§cДля этого режима требуется пати.");
+                player.closeInventory();
+                return;
+            }
+            Party party = partyOpt.get();
+            if (!party.isLeader(player)) {
+                player.sendMessage("§cТолько лидер пати может начать поиск игры.");
+                player.closeInventory();
+                return;
+            }
+            if (party.getSize() != mode.getTeamSize()) {
+                player.sendMessage("§cРазмер вашей пати ("+party.getSize()+") не соответствует выбранному режиму ("+mode.getTeamSize()+").");
+                player.closeInventory();
+                return;
+            }
+            plugin.getQueueManager().addPlayerToQueue(player, kit, mode);
+        }
+    }
 
     public void createParty(Player leader) {
         if (playerPartyMap.containsKey(leader.getUniqueId())) {
-            leader.sendMessage(ChatColor.RED + "Вы уже находитесь в пати! Пожалуйста покиньте её");
+            leader.sendMessage("§cВы уже в пати.");
             return;
         }
         Party party = new Party(leader);
         playerPartyMap.put(leader.getUniqueId(), party);
-        leader.sendMessage("Вы создали пати!");
+        leader.sendMessage("§aВы создали пати.");
     }
 
     public Optional<Party> getParty(Player player) {
+        if (player == null) return Optional.empty();
         return Optional.ofNullable(playerPartyMap.get(player.getUniqueId()));
     }
 
-    public void inviteParty(Player leader, Player target) {
+    public Optional<Party> getParty(UUID uuid) {
+        if (uuid == null) return Optional.empty();
+        return Optional.ofNullable(playerPartyMap.get(uuid));
+    }
+    public void invitePlayer(Player leader, Player target) {
         Optional<Party> partyOpt = getParty(leader);
         if (partyOpt.isEmpty()) {
             createParty(leader);
@@ -44,27 +82,26 @@ public class PartyManager {
         Party party = partyOpt.get();
 
         if (leader.equals(target)) {
-            leader.sendMessage(ChatColor.RED + "Вы не можете пригласить самого себя");
+            leader.sendMessage("§cВы не можете пригласить самого себя.");
             return;
         }
 
         if (getParty(target).isPresent()) {
-            leader.sendMessage(ChatColor.RED + "Игрок " + target.getName() + " вы уже состоите в пати");
+            leader.sendMessage("§cИгрок " + target.getName() + " уже состоит в пати.");
             return;
         }
         invites.put(target.getUniqueId(), party);
         party.addInvite(target);
 
-        leader.sendMessage(ChatColor.RED + "Вы пригласили " + target.getName() + " в пати");
+        leader.sendMessage("§aВы пригласили " + target.getName() + " в пати.");
 
-        TextComponent message = new TextComponent(ChatColor.YELLOW + "----------------------------------\\n");
-        TextComponent inviteBody = new TextComponent(ChatColor.GREEN + "" + leader.getName() + " пригласил вас в пати! ");
-        TextComponent acceptButton = new TextComponent(ChatColor.AQUA + "[ПРИНЯТЬ]");
+        TextComponent message = new TextComponent("§e----------------------------------\n");
+        TextComponent inviteBody = new TextComponent("§a" + leader.getName() + " пригласил вас в пати! ");
+        TextComponent acceptButton = new TextComponent("§b[ПРИНЯТЬ]");
         acceptButton.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/party accept " + leader.getName()));
         inviteBody.addExtra(acceptButton);
         message.addExtra(inviteBody);
-        message.addExtra("\n" + ChatColor.YELLOW + "----------------------------------");
-
+        message.addExtra("\n§e----------------------------------");
         target.spigot().sendMessage(message);
     }
     public void promotePlayer(Player currentLeader, Player newLeader) {
@@ -119,34 +156,31 @@ public class PartyManager {
     }
 
     public void disbandParty(Party party) {
-        party.broadcast("§cПати была распущена лидером.");
+        party.broadcast("§cПати была распущена.");
         for (UUID memberUUID : party.getMembers()) {
             playerPartyMap.remove(memberUUID);
             invites.remove(memberUUID);
         }
     }
 
+
     public void leaveParty(Player player) {
-        Optional<Party> partyOpt = getParty(player);
-        if (partyOpt.isEmpty()) {
-            player.sendMessage("§cВы не состоите в пати.");
-            return;
-        }
-        Party party = partyOpt.get();
-        if (party.isLeader(player)) {
-            disbandParty(party);
-        } else {
-            party.removeMember(player);
-            playerPartyMap.remove(player.getUniqueId());
-            player.sendMessage("§eВы покинули пати.");
-            party.broadcast("§eИгрок " + player.getName() + " покинул пати.");
-        }
+        getParty(player).ifPresent(party -> {
+            if (party.isLeader(player)) {
+                disbandParty(party);
+            } else {
+                party.removeMember(player);
+                playerPartyMap.remove(player.getUniqueId());
+                player.sendMessage("§eВы покинули пати.");
+                party.broadcast("§eИгрок " + player.getName() + " покинул пати.");
+            }
+        });
     }
     public void kickPlayer(Player leader, Player target) {
         Optional<Party> partyOpt = getParty(leader);
 
-        if(partyOpt.isEmpty()||!partyOpt.get().isLeader(target)) {
-            leader.sendMessage(ChatColor.RED+"Только лидер пати может исключать игроков");
+        if(partyOpt.isEmpty() || !partyOpt.get().isLeader(leader)) {
+            leader.sendMessage("§cТолько лидер пати может исключать игроков.");
             return;
         }
         Party party = partyOpt.get();
@@ -166,4 +200,5 @@ public class PartyManager {
         party.broadcast("§eИгрок " + target.getName() + " был исключен из пати.");
         target.sendMessage("§cВы были исключены из пати.");
     }
+
 }

@@ -2,7 +2,7 @@ package com.ovidius.xorealis.duels.manager;
 
 import com.ovidius.xorealis.duels.XorealisDuels;
 import com.ovidius.xorealis.duels.object.Arena;
-import lombok.AllArgsConstructor;
+import com.ovidius.xorealis.duels.object.ArenaState;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -10,19 +10,19 @@ import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.util.NumberConversions;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Level;
 
-@AllArgsConstructor
 public class ArenaManager {
     private final XorealisDuels plugin;
     private final List<Arena> arenas = new ArrayList<>();
 
+    public ArenaManager(XorealisDuels plugin) {
+        this.plugin = plugin;
+    }
 
     public void loadArenas() {
         arenas.clear();
@@ -32,65 +32,73 @@ public class ArenaManager {
         }
 
         FileConfiguration config = YamlConfiguration.loadConfiguration(arenasFile);
-
-
         String worldName = config.getString("duel_world", "world");
         World world = Bukkit.getWorld(worldName);
 
         if (world == null) {
-            plugin.getLogger().severe("=============================================");
-            plugin.getLogger().severe("КРИТИЧЕСКАЯ ОШИБКА: Мир для дуэлей '" + worldName + "' не найден!");
-            plugin.getLogger().severe("Ни одна арена не будет загружена.");
-            plugin.getLogger().severe("=============================================");
+            plugin.getLogger().log(Level.SEVERE, "Critical Error: Duel world ''{0}'' not found! No arenas will be loaded.", worldName);
             return;
         }
 
         ConfigurationSection section = config.getConfigurationSection("arenas");
         if (section == null) {
-            plugin.getLogger().warning("Секция 'arenas' не найдена в arenas.yml!");
+            plugin.getLogger().warning("The 'arenas' section was not found in arenas.yml.");
             return;
         }
 
         for (String arenaId : section.getKeys(false)) {
             try {
                 String displayName = ChatColor.translateAlternateColorCodes('&', section.getString(arenaId + ".display-name", arenaId));
-                Location spawn1 = parseLocation(world, section.getConfigurationSection(arenaId + ".spawn-1"));
-                Location spawn2 = parseLocation(world, section.getConfigurationSection(arenaId + ".spawn-2"));
+                List<Location> spawns1 = parseLocationList(world, section.getMapList(arenaId + ".team-1-spawns"));
+                List<Location> spawns2 = parseLocationList(world, section.getMapList(arenaId + ".team-2-spawns"));
 
-                Arena arena = new Arena(arenaId, displayName, spawn1, spawn2);
+                if (spawns1.isEmpty() || spawns2.isEmpty()) {
+                    plugin.getLogger().warning("Arena '" + arenaId + "' has no spawn points and was skipped.");
+                    continue;
+                }
+
+                Arena arena = new Arena(arenaId, displayName, spawns1, spawns2);
                 arenas.add(arena);
-                plugin.getLogger().info("Успешно загружена арена: " + arenaId + " в мире " + worldName);
-
             } catch (Exception e) {
-                plugin.getLogger().log(Level.SEVERE, "Ошибка при загрузке арены с ID: " + arenaId, e);
+                plugin.getLogger().log(Level.SEVERE, "Error loading arena with ID: " + arenaId, e);
             }
         }
+        plugin.getLogger().info("Loaded " + arenas.size() + " arenas.");
+    }
 
-        if(arenas.isEmpty()) {
-            plugin.getLogger().warning("Внимание: Ни одной арены не было найдено в файле arenas.yml");
-        } else {
-            plugin.getLogger().info("Загружено " + arenas.size() + " арен.");
+    private List<Location> parseLocationList(World world, List<Map<?, ?>> rawList) {
+        List<Location> locations = new ArrayList<>();
+        if (rawList == null) return locations;
+
+        for (Map<?, ?> map : rawList) {
+            try {
+                double x = NumberConversions.toDouble(map.get("x"));
+                double y = NumberConversions.toDouble(map.get("y"));
+                double z = NumberConversions.toDouble(map.get("z"));
+                Object rawYaw = map.get("yaw");
+                Object rawPitch = map.get("pitch");
+
+                float yaw = (rawYaw != null) ? NumberConversions.toFloat(rawYaw) : 0.0f;
+                float pitch = (rawPitch != null) ? NumberConversions.toFloat(rawPitch) : 0.0f;
+
+                locations.add(new Location(world, x, y, z, yaw, pitch));
+            } catch (Exception e) {
+                plugin.getLogger().warning("Failed to parse a spawn point location: " + e.getMessage());
+            }
         }
-    }
-    private Location parseLocation(World world, ConfigurationSection section) {
-        if(section == null) throw new IllegalArgumentException("Arena configuration is missing section");
-        double x = section.getDouble("x");
-        double y = section.getDouble("y");
-        double z = section.getDouble("z");
-        float yaw= (float) section.getDouble("yaw", 0.0);
-        float pitch= (float) section.getDouble("pitch", 0.0);
-        return new Location(world, x, y, z, yaw, pitch);
+        return locations;
     }
 
-    public Optional<Arena> findAvailableArena(){
+    public Optional<Arena> findAvailableArena(int requiredSpawnsPerTeam) {
         List<Arena> shuffledArenas = new ArrayList<>(arenas);
         Collections.shuffle(shuffledArenas);
-
-        return shuffledArenas.stream().filter(arena->arena.getState()==
-                com.ovidius.xorealis.duels.object.ArenaState.AVAILABLE).
-                findFirst();
+        return shuffledArenas.stream()
+                .filter(arena -> arena.getState() == ArenaState.AVAILABLE)
+                .filter(arena -> arena.getTeam1Spawns().size() >= requiredSpawnsPerTeam && arena.getTeam2Spawns().size() >= requiredSpawnsPerTeam)
+                .findFirst();
     }
-    public List<Arena> getAllArenas(){
-        return arenas;
+
+    public List<Arena> getAllArenas() {
+        return Collections.unmodifiableList(arenas);
     }
 }

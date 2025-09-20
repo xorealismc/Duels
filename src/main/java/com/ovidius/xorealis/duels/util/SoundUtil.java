@@ -1,50 +1,53 @@
 package com.ovidius.xorealis.duels.util;
 
-import org.bukkit.Color;
-import org.bukkit.FireworkEffect;
-import org.bukkit.Location;
 import org.bukkit.Sound;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.meta.FireworkMeta;
 
-public class SoundUtil {
 
+public final class SoundUtil {
+
+
+    private SoundUtil() {}
+
+    /**
+     * Звук успешного клика или действия.
+     */
     public static void playSuccessClick(Player player) {
-        player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.7F, 1.5F);
+        player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.8f, 1.5f);
     }
 
+    /**
+     * Звук ошибки или неудачного действия.
+     */
     public static void playErrorClick(Player player) {
-        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 0.5F);
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 0.5f);
     }
 
+    /**
+     * Звук тика таймера обратного отсчета.
+     */
     public static void playCountdownTick(Player player) {
-        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0F, 1.2F);
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.2f);
     }
 
+    /**
+     * Громкий, эпичный звук начала боя.
+     */
     public static void playDuelStart(Player player) {
-        player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 1.0F, 1.0F);
-    }
-    public static void spawnVictoryFireworks(Player winner) {
-        Location loc = winner.getLocation();
-        Firework fw = (Firework) loc.getWorld().spawnEntity(loc, EntityType.FIREWORK_ROCKET);
-        FireworkMeta fwm = fw.getFireworkMeta();
-
-        fwm.setPower(1);
-        fwm.addEffect(FireworkEffect.builder()
-                .withColor(Color.LIME)
-                .withColor(Color.YELLOW)
-                .flicker(true)
-                .trail(true)
-                .build());
-
-        fw.setFireworkMeta(fwm);
-        fw.detonate();
+        player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 1.0f, 1.2f);
     }
 
-    public static void playDefeatParticles(Player loser) {
-        Location loc = loser.getLocation().add(0, 1, 0);
+    /**
+     * Победный звук.
+     */
+    public static void playVictory(Player player) {
+        player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
     }
 
+    /**
+     * Звук поражения.
+     */
+    public static void playDefeat(Player player) {
+        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+    }
 }

@@ -16,22 +16,24 @@ public class LeaveQueueCommand implements CommandExecutor {
     private final XorealisDuels plugin;
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
-                             @NotNull String label, @NotNull String[] args) {
-        if(!(sender instanceof Player)){
-            sender.sendMessage(ChatColor.RED + "Only players can execute this command.");
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage("§cThis command can only be used by a player.");
             return true;
         }
-
         Player player = (Player) sender;
 
-        boolean wasInQueue = plugin.getQueueManager().removePlayerFromAllQueues(player.getUniqueId());
+        boolean wasInQueue = plugin.getQueueManager().removeAllQueues(player.getUniqueId());
 
-        if(!wasInQueue){
-            player.sendMessage(ChatColor.RED + "Вы успешно покинули очередь.");
-        }else {
-            player.sendMessage(ChatColor.RED+"Вы не находитесь в очереди.");
+        if (wasInQueue) {
+            player.sendMessage("§aYou have successfully left the queue.");
+            plugin.getPartyManager().getParty(player).ifPresent(party ->
+                    party.broadcast("§e" + player.getName() + " has left the queue.")
+            );
+        } else {
+            player.sendMessage("§cYou are not in a queue.");
         }
+
         return true;
     }
 

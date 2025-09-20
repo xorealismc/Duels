@@ -8,13 +8,20 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RequiredArgsConstructor
-public class PartyCommand implements CommandExecutor {
+public class PartyCommand implements CommandExecutor, TabCompleter {
 
     private final XorealisDuels plugin;
+    private final List<String> subCommands = List.of("create", "invite", "accept", "leave", "kick", "disband", "list", "promote");
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
@@ -52,7 +59,7 @@ public class PartyCommand implements CommandExecutor {
                     player.sendMessage(ChatColor.RED + "Игрок не найден");
                     break;
                 }
-                plugin.getPartyManager().inviteParty(player, target);
+                plugin.getPartyManager().invitePlayer(player, target);
                 break;
             case "accept":
                 if (args.length < 2) {
@@ -130,6 +137,29 @@ public class PartyCommand implements CommandExecutor {
         }
 
         return true;
+    }
+
+    @Nullable
+    @Override
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
+        if (args.length == 1) {
+            return subCommands.stream()
+                    .filter(s -> s.startsWith(args[0].toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+        if (args.length == 2) {
+            String subCommand = args[0].toLowerCase();
+            if (subCommand.equals("invite") || subCommand.equals("kick") || subCommand.equals("promote")) {
+
+                return Bukkit.getOnlinePlayers().stream()
+                        .map(Player::getName)
+                        .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
+                        .collect(Collectors.toList());
+            }
+        }
+
+        return new ArrayList<>();
     }
 
     private void sendHelpMessage(Player player) {
